@@ -23,3 +23,5 @@ class Task(Base):
 
     project = relationship("Project")
     developer = relationship("User")
+
+    solution_file_path = Column(String, nullable=True)
