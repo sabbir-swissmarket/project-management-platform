@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../domain/auth_state.dart';
 import '../provider/auth_provider.dart';
@@ -18,6 +19,20 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authProvider);
+
+    // When auth state updates to authenticated, navigate to appropriate home
+    ref.listen<AuthState>(authProvider, (previous, next) {
+      if (next.status == AuthStatus.authenticated &&
+          previous?.status != AuthStatus.authenticated) {
+        if (next.role == "admin") {
+          context.go('/admin');
+        } else if (next.role == "buyer") {
+          context.go('/buyer');
+        } else if (next.role == "developer") {
+          context.go('/developer');
+        }
+      }
+    });
 
     return Scaffold(
       body: Container(

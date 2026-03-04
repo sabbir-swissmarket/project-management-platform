@@ -2,9 +2,9 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 from app.core.database import SessionLocal
-from backend.app.models.project import Project
-from backend.app.models.task import Task
-from backend.app.models.payment import Payment
+from app.models.project import Project
+from app.models.task import Task
+from app.models.payment import Payment
 from app.core.dependencies import require_role
 
 router = APIRouter(prefix="/admin", tags=["Admin"])

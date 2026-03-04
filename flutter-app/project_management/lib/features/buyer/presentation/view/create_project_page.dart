@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:project_management/core/utils/global_keys.dart';
+import 'package:go_router/go_router.dart';
 
 import '../provider/buyer_provider.dart';
 
@@ -35,13 +35,23 @@ class _CreateProjectPageState extends ConsumerState<CreateProjectPage> {
             const SizedBox(height: 24),
             ElevatedButton(
               onPressed: () async {
-                await ref
-                    .read(buyerProvider.notifier)
-                    .createProject(
-                      titleController.text,
-                      descriptionController.text,
+                try {
+                  await ref
+                      .read(buyerProvider.notifier)
+                      .createProject(
+                        titleController.text,
+                        descriptionController.text,
+                      );
+                  if (context.mounted) {
+                    context.pop();
+                  }
+                } catch (e) {
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Failed to create project: $e')),
                     );
-                Navigator.pop(navigatorKey.currentContext!);
+                  }
+                }
               },
               child: const Text("Create"),
             ),

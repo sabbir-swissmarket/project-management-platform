@@ -19,17 +19,22 @@ GoRouter createRouter(WidgetRef ref) {
 
     redirect: (context, state) {
       final authState = ref.read(authProvider);
+      final loggingIn = state.uri.toString() == '/login';
 
       if (authState.status == AuthStatus.unauthenticated) {
-        return '/login';
+        // if the user is not logged in, send them to login unless already there
+        return loggingIn ? null : '/login';
       }
 
-      if (authState.status == AuthStatus.authenticated) {
+      // logged in – prevent navigating back to login
+      if (loggingIn) {
+        // send to role-based home
         if (authState.role == "admin") return '/admin';
         if (authState.role == "buyer") return '/buyer';
         if (authState.role == "developer") return '/developer';
       }
 
+      // no redirect; allow staying on current path
       return null;
     },
 

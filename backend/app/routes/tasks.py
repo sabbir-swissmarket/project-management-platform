@@ -5,11 +5,13 @@ from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 from app.core.database import SessionLocal
 from app.models.task import Task
+from app.models.user import User
 from app.schemas.task import TaskCreate
 from app.core.dependencies import require_role, get_current_user
-from app.services.task_service import validate_status_transition
+from app.services.task_services import validate_status_transition
 
-router = APIRouter(prefix="/tasks", tags=["Tasks"])
+# disable slash redirect to avoid 307 responses when client uses exact path
+router = APIRouter(prefix="/tasks", tags=["Tasks"], redirect_slashes=False)
 
 def get_db():
     db = SessionLocal()
@@ -18,17 +20,21 @@ def get_db():
     finally:
         db.close()
 
-@router.post("/")
+@router.post("")
 def create_task(
     task: TaskCreate,
-    project_id: str,
     db: Session = Depends(get_db),
     user = Depends(require_role("buyer"))
 ):
+    # ensure assigned developer exists and really is a developer
+    dev = db.query(User).filter(User.id == task.assigned_developer_id).first()
+    if not dev or dev.role != "developer":
+        raise HTTPException(status_code=400, detail="Invalid developer id")
+
     new_task = Task(
         title=task.title,
         description=task.description,
-        project_id=project_id,
+        project_id=task.project_id,
         hourly_rate=task.hourly_rate,
         assigned_developer_id=task.assigned_developer_id,
         status="todo"

@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 
 import '../domain/project_model.dart';
 import '../domain/task_model.dart';
+import '../domain/developer_model.dart';
 
 class BuyerRepository {
   final Dio dio;
@@ -25,6 +26,14 @@ class BuyerRepository {
       "/projects",
       data: {"title": title, "description": description},
     );
+  }
+
+  Future<List<Developer>> fetchDevelopers() async {
+    final response = await dio.get("/developers");
+
+    return (response.data as List)
+        .map((e) => Developer.fromJson(e as Map<String, dynamic>))
+        .toList();
   }
 
   Future<void> createTask({

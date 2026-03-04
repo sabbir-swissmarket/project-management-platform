@@ -19,8 +19,11 @@ class BuyerDashboard extends ConsumerWidget {
         actions: [
           IconButton(
             icon: const Icon(Icons.logout),
-            onPressed: () => ref.read(authProvider.notifier).logout(),
-            tooltip: 'Logout',
+            onPressed: () async {
+              final router = GoRouter.of(context);
+              await ref.read(authProvider.notifier).logout();
+              router.go('/login');
+            },
           ),
         ],
       ),
@@ -35,7 +38,7 @@ class BuyerDashboard extends ConsumerWidget {
               children: [
                 ElevatedButton(
                   onPressed: () {
-                    context.go('/buyer/create-project');
+                    context.push('/buyer/create-project');
                   },
                   child: const Text("Create Project"),
                 ),
@@ -57,7 +60,7 @@ class BuyerDashboard extends ConsumerWidget {
                           subtitle: Text(project.description),
                           trailing: const Icon(Icons.arrow_forward_ios),
                           onTap: () {
-                            context.go('/buyer/${project.id}/tasks');
+                            context.push('/buyer/${project.id}/tasks');
                           },
                         ),
                       );

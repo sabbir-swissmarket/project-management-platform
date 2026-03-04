@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/legacy.dart';
 import '../../../../core/network/dio_provider.dart';
 import '../../data/buyer_repository.dart';
 import '../../domain/project_model.dart';
+import '../../domain/developer_model.dart';
 
 final buyerProvider =
     StateNotifierProvider<BuyerNotifier, AsyncValue<List<Project>>>((ref) {
@@ -34,6 +35,10 @@ class BuyerNotifier extends StateNotifier<AsyncValue<List<Project>>> {
     } catch (e) {
       state = AsyncError(e, StackTrace.current);
     }
+  }
+
+  Future<List<Developer>> fetchDevelopers() {
+    return repository.fetchDevelopers();
   }
 
   Future<void> createTask({

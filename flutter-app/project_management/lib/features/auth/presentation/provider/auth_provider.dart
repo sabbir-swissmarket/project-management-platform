@@ -1,7 +1,9 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/legacy.dart';
 
 import '../../../../../core/network/dio_provider.dart';
 import '../../../../../core/utils/jwt_decoder.dart';
+import '../../../../core/storage/local_storage_service.dart';
 import '../../../../core/storage/secure_storage_services.dart';
 import '../../data/auth_repository.dart';
 import '../../domain/auth_state.dart';
@@ -14,6 +16,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
   AuthNotifier() : super(AuthState());
 
   final _storage = SecureStorageService();
+  final _local = LocalStorageService();
   final _dio = DioProvider.createDio();
 
   Future<void> checkAuth() async {
@@ -24,9 +27,18 @@ class AuthNotifier extends StateNotifier<AuthState> {
       return;
     }
 
-    final role = JwtDecoder.getRole(token);
+    // prefer stored role so we don't need to decode every time
+    String? role = await _local.getRole();
+    if (role == null) {
+      role = JwtDecoder.getRole(token);
+      await _local.saveRole(role);
+    }
 
-    state = state.copyWith(status: AuthStatus.authenticated, role: role);
+    state = state.copyWith(
+      status: AuthStatus.authenticated,
+      role: role,
+      token: token,
+    );
   }
 
   Future<void> login(String email, String password) async {
@@ -39,6 +51,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
       await _storage.saveToken(token);
 
       final role = JwtDecoder.getRole(token);
+      await _local.saveRole(role);
 
       state = state.copyWith(
         status: AuthStatus.authenticated,
@@ -46,6 +59,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
         token: token,
       );
     } catch (e) {
+      debugPrint("Login error: $e");
       state = state.copyWith(
         status: AuthStatus.unauthenticated,
         error: "Login failed",
@@ -55,6 +69,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
   Future<void> logout() async {
     await _storage.clearToken();
+    await _local.clearRole();
 
     state = AuthState(status: AuthStatus.unauthenticated);
   }

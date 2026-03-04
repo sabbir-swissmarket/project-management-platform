@@ -9,3 +9,8 @@ class UserCreate(BaseModel):
 class UserLogin(BaseModel):
     email: EmailStr
     password: str
+
+class UserSummary(BaseModel):
+    id: str
+    name: str
+    email: EmailStr
