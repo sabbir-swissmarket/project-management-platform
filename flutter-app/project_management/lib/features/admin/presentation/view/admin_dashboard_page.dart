@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../auth/presentation/provider/auth_provider.dart';
 import '../provider/admin_provider.dart';
@@ -23,7 +24,12 @@ class AdminDashboard extends ConsumerWidget {
           ),
           IconButton(
             icon: const Icon(Icons.logout),
-            onPressed: () => ref.read(authProvider.notifier).logout(),
+            onPressed: () async {
+              await ref.read(authProvider.notifier).logout();
+              if (context.mounted) {
+                context.go('/login');
+              }
+            },
           ),
         ],
       ),
@@ -34,9 +40,9 @@ class AdminDashboard extends ConsumerWidget {
           error: (e, _) => const Center(child: Text("Error loading stats")),
           data: (stats) {
             return GridView.count(
-              crossAxisCount: 3,
-              crossAxisSpacing: 20,
-              mainAxisSpacing: 20,
+              crossAxisCount: 2,
+              crossAxisSpacing: 12,
+              mainAxisSpacing: 12,
               children: [
                 StatCard(
                   title: "Total Projects",

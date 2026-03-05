@@ -1,4 +1,8 @@
+import 'dart:io';
+
 import 'package:dio/dio.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 import '../domain/project_model.dart';
 import '../domain/task_model.dart';
@@ -59,10 +63,114 @@ class BuyerRepository {
     await dio.post("/payments/$taskId");
   }
 
-  Future<void> downloadSolution(String taskId) async {
-    await dio.get(
+  Future<String> downloadSolution(String taskId) async {
+    final response = await dio.get(
       "/tasks/$taskId/download",
       options: Options(responseType: ResponseType.bytes),
     );
+
+    final fileName = _resolveFileName(
+      response.headers.value('content-disposition'),
+      taskId,
+    );
+
+    final directory = await _resolveDownloadDirectory();
+    final filePath = "${directory.path}/$fileName";
+    final file = File(filePath);
+
+    if (!await file.parent.exists()) {
+      await file.parent.create(recursive: true);
+    }
+
+    await file.writeAsBytes(
+      (response.data as List<int>),
+      flush: true,
+    );
+
+    return file.path;
+  }
+
+  String _resolveFileName(String? header, String taskId) {
+    if (header != null) {
+      final encodedMatch =
+          RegExp(r"filename\*=UTF-8''([^;]+)").firstMatch(header);
+      if (encodedMatch != null) {
+        final encodedValue = encodedMatch.group(1);
+        if (encodedValue != null && encodedValue.isNotEmpty) {
+          return Uri.decodeComponent(encodedValue);
+        }
+      }
+
+      final plainMatch = RegExp(r'filename="?([^";]+)"?').firstMatch(header);
+      if (plainMatch != null) {
+        final value = plainMatch.group(1);
+        if (value != null && value.isNotEmpty) {
+          return value;
+        }
+      }
+    }
+
+    return "task_$taskId.zip";
+  }
+
+  Future<Directory> _resolveDownloadDirectory() async {
+    if (Platform.isAndroid) {
+      await _ensureStoragePermission();
+
+      final directories = await getExternalStorageDirectories(
+        type: StorageDirectory.downloads,
+      );
+
+      if (directories != null && directories.isNotEmpty) {
+        return directories.first;
+      }
+
+      final fallback = Directory('/storage/emulated/0/Download');
+      if (!await fallback.exists()) {
+        await fallback.create(recursive: true);
+      }
+      return fallback;
+    }
+
+    if (Platform.isIOS) {
+      final docsDir = await getApplicationDocumentsDirectory();
+      final downloadsDir = Directory('${docsDir.path}/Downloads');
+      if (!await downloadsDir.exists()) {
+        await downloadsDir.create(recursive: true);
+      }
+      return downloadsDir;
+    }
+
+    final downloads = await getDownloadsDirectory();
+    if (downloads != null) {
+      return downloads;
+    }
+
+    return await getApplicationDocumentsDirectory();
+  }
+
+  Future<void> _ensureStoragePermission() async {
+    if (!Platform.isAndroid) return;
+
+    var status = await Permission.storage.status;
+
+    if (!status.isGranted) {
+      status = await Permission.storage.request();
+    }
+
+    if (status.isGranted) {
+      return;
+    }
+
+    var manageStatus = await Permission.manageExternalStorage.status;
+    if (!manageStatus.isGranted) {
+      manageStatus = await Permission.manageExternalStorage.request();
+    }
+
+    if (!manageStatus.isGranted) {
+      throw Exception(
+        "Storage permission is required to save downloads. Please enable it in Settings.",
+      );
+    }
   }
 }

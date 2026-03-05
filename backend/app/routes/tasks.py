@@ -105,6 +105,8 @@ def submit_task(
     task.hours_logged = hours_logged
 
     # Save file
+    os.makedirs("uploads", exist_ok=True)
+
     file_location = f"{task.id}_{file.filename}"
     file_path = os.path.join("uploads", file_location)
     with open(file_path, "wb") as buffer:
@@ -113,7 +115,7 @@ def submit_task(
     # Update task
     task.status = "submitted"
     task.hours_logged = hours_logged
-    task.submission_file_path = file_location
+    task.solution_file_path = file_location
     db.commit()
     db.refresh(task)
 
@@ -157,18 +159,21 @@ def download_solution(
     if not task:
         raise HTTPException(status_code=404, detail="Task not found")
     
-    if task.project.owner_id != user.id:
+    if task.project.buyer_id != user.id:
         raise HTTPException(status_code=403, detail="Not your project")
 
     if task.status != "paid":
         raise HTTPException(status_code=400, detail="Payment required to access file")
 
-    file_path = os.path.join("uploads", task.submission_file_path)
+    if not task.solution_file_path:
+        raise HTTPException(status_code=404, detail="File not available")
+
+    file_path = os.path.join("uploads", task.solution_file_path)
     if not os.path.exists(file_path):
         raise HTTPException(status_code=404, detail="File not found")
 
     return FileResponse(
-        path=task.solution_file_path,
-        filename=os.path.basename(task.solution_file_path),
+        path=file_path,
+        filename=os.path.basename(file_path),
         media_type="application/zip"
     )

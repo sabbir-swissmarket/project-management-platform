@@ -14,7 +14,10 @@ class DeveloperRepository {
   }
 
   Future<void> updateStatus(String taskId, String newStatus) async {
-    await dio.patch("/tasks/$taskId/status", data: {"new_status": newStatus});
+    await dio.patch(
+      "/tasks/$taskId/status",
+      queryParameters: {"new_status": newStatus},
+    );
   }
 
   Future<void> submitTask({

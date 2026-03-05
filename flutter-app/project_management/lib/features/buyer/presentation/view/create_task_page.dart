@@ -134,9 +134,10 @@ class _CreateTaskPageState extends ConsumerState<CreateTaskPage> {
                   }
 
                   return DropdownButtonFormField<String>(
-                    value: _selectedDeveloperId,
-                    decoration:
-                        const InputDecoration(labelText: "Assign Developer"),
+                    initialValue: _selectedDeveloperId,
+                    decoration: const InputDecoration(
+                      labelText: "Assign Developer",
+                    ),
                     isExpanded: true,
                     validator: (value) {
                       if (value == null || value.isEmpty) {

@@ -65,7 +65,11 @@ class TaskDetailsPage extends ConsumerWidget {
                 if (task.status == "paid") ...[
                   ElevatedButton(
                     onPressed: () async {
-                      await repository.downloadSolution(task.id);
+                      await _handleDownloadSolution(
+                        context: context,
+                        repository: repository,
+                        taskId: task.id,
+                      );
                     },
                     child: const Text("Download Solution"),
                   ),
@@ -79,6 +83,47 @@ class TaskDetailsPage extends ConsumerWidget {
           const Scaffold(body: Center(child: CircularProgressIndicator())),
       error: (e, st) =>
           Scaffold(body: Center(child: Text('Error loading task: $e'))),
+    );
+  }
+}
+
+Future<void> _handleDownloadSolution({
+  required BuildContext context,
+  required BuyerRepository repository,
+  required String taskId,
+}) async {
+  final navigator = Navigator.of(context, rootNavigator: true);
+
+  showDialog(
+    context: context,
+    barrierDismissible: false,
+    builder: (_) => const Center(child: CircularProgressIndicator()),
+  );
+
+  try {
+    final savedPath = await repository.downloadSolution(taskId);
+
+    if (navigator.mounted) {
+      navigator.pop();
+    }
+
+    if (!context.mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Solution saved to $savedPath')),
+    );
+  } catch (error) {
+    if (navigator.mounted) {
+      navigator.pop();
+    }
+
+    if (!context.mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Failed to download file: $error'),
+        backgroundColor: Colors.redAccent,
+      ),
     );
   }
 }

@@ -18,8 +18,12 @@ class DeveloperNotifier extends StateNotifier<AsyncValue<List<Task>>> {
     loadTasks();
   }
 
-  Future<void> loadTasks() async {
+  Future<void> loadTasks({bool showLoading = true}) async {
     try {
+      if (showLoading) {
+        state = const AsyncLoading();
+      }
+
       final tasks = await repository.fetchAssignedTasks();
       state = AsyncData(tasks);
     } catch (e) {
@@ -41,9 +45,17 @@ class DeveloperNotifier extends StateNotifier<AsyncValue<List<Task>>> {
         filePath: filePath,
       );
 
-      await loadTasks();
+      await loadTasks(showLoading: false);
     } catch (e) {
       state = AsyncError(e, StackTrace.current);
     }
+  }
+
+  Future<void> updateTaskStatus({
+    required String taskId,
+    required String newStatus,
+  }) async {
+    await repository.updateStatus(taskId, newStatus);
+    await loadTasks(showLoading: false);
   }
 }
