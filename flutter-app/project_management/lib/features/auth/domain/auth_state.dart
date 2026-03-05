@@ -18,12 +18,13 @@ class AuthState {
     String? role,
     String? token,
     String? error,
+    bool clearError = false,
   }) {
     return AuthState(
       status: status ?? this.status,
       role: role ?? this.role,
       token: token ?? this.token,
-      error: error,
+      error: clearError ? null : (error ?? this.error),
     );
   }
 }

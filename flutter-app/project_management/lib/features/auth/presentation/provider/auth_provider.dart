@@ -13,17 +13,27 @@ final authProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref) {
 });
 
 class AuthNotifier extends StateNotifier<AuthState> {
-  AuthNotifier() : super(AuthState());
+  AuthNotifier({
+    SecureStorageService? storage,
+    LocalStorageService? localStorage,
+    AuthRepository? repository,
+  })  : _storage = storage ?? SecureStorageService(),
+        _local = localStorage ?? LocalStorageService(),
+        _repository = repository ?? AuthRepository(DioProvider.createDio()),
+        super(AuthState());
 
-  final _storage = SecureStorageService();
-  final _local = LocalStorageService();
-  final _dio = DioProvider.createDio();
+  final SecureStorageService _storage;
+  final LocalStorageService _local;
+  final AuthRepository _repository;
 
   Future<void> checkAuth() async {
     final token = await _storage.getToken();
 
     if (token == null) {
-      state = state.copyWith(status: AuthStatus.unauthenticated);
+      state = state.copyWith(
+        status: AuthStatus.unauthenticated,
+        clearError: true,
+      );
       return;
     }
 
@@ -38,15 +48,18 @@ class AuthNotifier extends StateNotifier<AuthState> {
       status: AuthStatus.authenticated,
       role: role,
       token: token,
+      clearError: true,
     );
   }
 
   Future<void> login(String email, String password) async {
     try {
-      state = state.copyWith(status: AuthStatus.loading);
+      state = state.copyWith(
+        status: AuthStatus.loading,
+        clearError: true,
+      );
 
-      final repo = AuthRepository(_dio);
-      final token = await repo.login(email, password);
+      final token = await _repository.login(email, password);
 
       await _storage.saveToken(token);
 
@@ -57,6 +70,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
         status: AuthStatus.authenticated,
         role: role,
         token: token,
+        clearError: true,
       );
     } catch (e) {
       debugPrint("Login error: $e");

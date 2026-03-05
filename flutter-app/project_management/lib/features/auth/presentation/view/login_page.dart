@@ -5,6 +5,13 @@ import 'package:go_router/go_router.dart';
 import '../../domain/auth_state.dart';
 import '../provider/auth_provider.dart';
 
+class LoginPageKeys {
+  static const emailField = ValueKey('login_email_field');
+  static const passwordField = ValueKey('login_password_field');
+  static const submitButton = ValueKey('login_submit_button');
+  static const errorText = ValueKey('login_error_text');
+}
+
 class LoginPage extends ConsumerStatefulWidget {
   const LoginPage({super.key});
 
@@ -15,25 +22,43 @@ class LoginPage extends ConsumerStatefulWidget {
 class _LoginPageState extends ConsumerState<LoginPage> {
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
+  final _formKey = GlobalKey<FormState>();
+  late final ProviderSubscription<AuthState> _authSubscription;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _authSubscription = ref.listenManual<AuthState>(
+      authProvider,
+      _handleAuthStateChange,
+    );
+  }
+
+  @override
+  void dispose() {
+    _authSubscription.close();
+    emailController.dispose();
+    passwordController.dispose();
+    super.dispose();
+  }
+
+  void _submit() {
+    if (_formKey.currentState?.validate() != true) return;
+
+    FocusScope.of(context).unfocus();
+
+    ref.read(authProvider.notifier).login(
+          emailController.text.trim(),
+          passwordController.text.trim(),
+        );
+  }
 
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authProvider);
 
-    // When auth state updates to authenticated, navigate to appropriate home
-    ref.listen<AuthState>(authProvider, (previous, next) {
-      if (next.status == AuthStatus.authenticated &&
-          previous?.status != AuthStatus.authenticated) {
-        if (next.role == "admin") {
-          context.go('/admin');
-        } else if (next.role == "buyer") {
-          context.go('/buyer');
-        } else if (next.role == "developer") {
-          context.go('/developer');
-        }
-      }
-    });
-
+    final isLoading = authState.status == AuthStatus.loading;
     return Scaffold(
       body: Container(
         decoration: const BoxDecoration(
@@ -52,68 +77,116 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                 BoxShadow(blurRadius: 20, color: Colors.black26),
               ],
             ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Text(
-                  "Welcome Back",
-                  style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 24),
-
-                TextField(
-                  controller: emailController,
-                  decoration: const InputDecoration(
-                    labelText: "Email",
-                    border: OutlineInputBorder(),
+            child: Form(
+              key: _formKey,
+              autovalidateMode: AutovalidateMode.onUserInteraction,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text(
+                    "Welcome Back",
+                    style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
                   ),
-                ),
-
-                const SizedBox(height: 16),
-
-                TextField(
-                  controller: passwordController,
-                  obscureText: true,
-                  decoration: const InputDecoration(
-                    labelText: "Password",
-                    border: OutlineInputBorder(),
-                  ),
-                ),
-
-                const SizedBox(height: 24),
-
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: authState.status == AuthStatus.loading
-                        ? null
-                        : () {
-                            ref
-                                .read(authProvider.notifier)
-                                .login(
-                                  emailController.text,
-                                  passwordController.text,
-                                );
+                  const SizedBox(height: 24),
+                  AutofillGroup(
+                    child: Column(
+                      children: [
+                        TextFormField(
+                          key: LoginPageKeys.emailField,
+                          controller: emailController,
+                          keyboardType: TextInputType.emailAddress,
+                          textInputAction: TextInputAction.next,
+                          autofillHints: const [AutofillHints.username],
+                          decoration: const InputDecoration(
+                            labelText: "Email",
+                            border: OutlineInputBorder(),
+                          ),
+                          validator: (value) {
+                            if (value == null || value.trim().isEmpty) {
+                              return "Email is required";
+                            }
+                            return null;
                           },
-                    child: authState.status == AuthStatus.loading
-                        ? const CircularProgressIndicator()
-                        : const Text("Login"),
-                  ),
-                ),
-
-                if (authState.error != null)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 12),
-                    child: Text(
-                      authState.error!,
-                      style: const TextStyle(color: Colors.red),
+                        ),
+                        const SizedBox(height: 16),
+                        TextFormField(
+                          key: LoginPageKeys.passwordField,
+                          controller: passwordController,
+                          obscureText: true,
+                          enableSuggestions: false,
+                          autocorrect: false,
+                          textInputAction: TextInputAction.done,
+                          onFieldSubmitted: (_) => _submit(),
+                          autofillHints: const [AutofillHints.password],
+                          decoration: const InputDecoration(
+                            labelText: "Password",
+                            border: OutlineInputBorder(),
+                          ),
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return "Password is required";
+                            }
+                            if (value.length < 6) {
+                              return "Use at least 6 characters";
+                            }
+                            return null;
+                          },
+                        ),
+                      ],
                     ),
                   ),
-              ],
+                  const SizedBox(height: 24),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      key: LoginPageKeys.submitButton,
+                      onPressed: isLoading ? null : _submit,
+                      child: isLoading
+                          ? const SizedBox(
+                              height: 18,
+                              width: 18,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const Text("Login"),
+                    ),
+                  ),
+                  if (authState.error != null)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 12),
+                      child: Text(
+                        key: LoginPageKeys.errorText,
+                        authState.error!,
+                        style: const TextStyle(color: Colors.red),
+                      ),
+                    ),
+                ],
+              ),
             ),
           ),
         ),
       ),
     );
+  }
+
+  void _handleAuthStateChange(AuthState? previous, AuthState next) {
+    if (!mounted) return;
+
+    final movedToAuthenticated = next.status == AuthStatus.authenticated &&
+        previous?.status != AuthStatus.authenticated;
+    if (!movedToAuthenticated) return;
+
+    switch (next.role) {
+      case "admin":
+        context.go('/admin');
+        break;
+      case "buyer":
+        context.go('/buyer');
+        break;
+      case "developer":
+        context.go('/developer');
+        break;
+      default:
+        break;
+    }
   }
 }

@@ -15,8 +15,13 @@ final buyerProvider =
 class BuyerNotifier extends StateNotifier<AsyncValue<List<Project>>> {
   final BuyerRepository repository;
 
-  BuyerNotifier(this.repository) : super(const AsyncLoading()) {
-    loadProjects();
+  BuyerNotifier(
+    this.repository, {
+    bool autoLoad = true,
+  }) : super(const AsyncLoading()) {
+    if (autoLoad) {
+      loadProjects();
+    }
   }
 
   Future<void> loadProjects() async {

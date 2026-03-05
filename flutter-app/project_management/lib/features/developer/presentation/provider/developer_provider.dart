@@ -14,8 +14,13 @@ final developerProvider =
 class DeveloperNotifier extends StateNotifier<AsyncValue<List<Task>>> {
   final DeveloperRepository repository;
 
-  DeveloperNotifier(this.repository) : super(const AsyncLoading()) {
-    loadTasks();
+  DeveloperNotifier(
+    this.repository, {
+    bool autoLoad = true,
+  }) : super(const AsyncLoading()) {
+    if (autoLoad) {
+      loadTasks();
+    }
   }
 
   Future<void> loadTasks({bool showLoading = true}) async {
