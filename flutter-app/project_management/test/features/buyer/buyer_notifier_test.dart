@@ -1,11 +1,10 @@
-import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:project_management/features/buyer/data/buyer_repository.dart';
-import 'package:project_management/features/buyer/domain/developer_model.dart';
-import 'package:project_management/features/buyer/domain/project_model.dart';
-import 'package:project_management/features/buyer/domain/task_model.dart';
+import 'package:project_management/features/buyer/domain/repositories/buyer_repository.dart';
+import 'package:project_management/features/shared/domain/entities/developer.dart';
+import 'package:project_management/features/shared/domain/entities/project.dart';
+import 'package:project_management/features/shared/domain/entities/task.dart';
 import 'package:project_management/features/buyer/presentation/provider/buyer_provider.dart';
 
 void main() {
@@ -77,9 +76,7 @@ void main() {
   });
 }
 
-class _FakeBuyerRepository extends BuyerRepository {
-  _FakeBuyerRepository() : super(Dio());
-
+class _FakeBuyerRepository implements BuyerRepository {
   List<Project> projects = [];
   List<Developer> developers = [];
   bool shouldThrow = false;

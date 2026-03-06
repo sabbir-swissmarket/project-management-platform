@@ -5,8 +5,9 @@ import '../../../../../core/network/dio_provider.dart';
 import '../../../../../core/utils/jwt_decoder.dart';
 import '../../../../core/storage/local_storage_service.dart';
 import '../../../../core/storage/secure_storage_services.dart';
-import '../../data/auth_repository.dart';
+import '../../data/repositories/auth_repository_impl.dart';
 import '../../domain/auth_state.dart';
+import '../../domain/repositories/auth_repository.dart';
 
 final authProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref) {
   return AuthNotifier();
@@ -19,7 +20,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
     AuthRepository? repository,
   })  : _storage = storage ?? SecureStorageService(),
         _local = localStorage ?? LocalStorageService(),
-        _repository = repository ?? AuthRepository(DioProvider.createDio()),
+        _repository = repository ?? AuthRepositoryImpl(DioProvider.createDio()),
         super(AuthState());
 
   final SecureStorageService _storage;

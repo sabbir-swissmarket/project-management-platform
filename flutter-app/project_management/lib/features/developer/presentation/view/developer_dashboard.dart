@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:project_management/features/shared/domain/entities/task.dart';
 
 import '../../../auth/presentation/provider/auth_provider.dart';
-import '../../../buyer/domain/task_model.dart';
 import '../provider/developer_provider.dart';
 
 const Map<String, List<String>> _statusUpdateOptions = {

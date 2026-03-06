@@ -2,13 +2,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 
 import '../../../../core/network/dio_provider.dart';
-import '../../../buyer/domain/task_model.dart';
-import '../../data/developer_repository.dart';
+import 'package:project_management/features/shared/domain/entities/task.dart';
+import '../../data/repositories/developer_repository_impl.dart';
+import '../../domain/repositories/developer_repository.dart';
 
 final developerProvider =
     StateNotifierProvider<DeveloperNotifier, AsyncValue<List<Task>>>((ref) {
       final dio = DioProvider.createDio();
-      return DeveloperNotifier(DeveloperRepository(dio));
+      return DeveloperNotifier(DeveloperRepositoryImpl(dio));
     });
 
 class DeveloperNotifier extends StateNotifier<AsyncValue<List<Task>>> {

@@ -1,9 +1,8 @@
-import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:project_management/features/buyer/domain/task_model.dart';
-import 'package:project_management/features/developer/data/developer_repository.dart';
+import 'package:project_management/features/shared/domain/entities/task.dart';
+import 'package:project_management/features/developer/domain/repositories/developer_repository.dart';
 import 'package:project_management/features/developer/presentation/provider/developer_provider.dart';
 
 void main() {
@@ -84,9 +83,7 @@ void main() {
   });
 }
 
-class _FakeDeveloperRepository extends DeveloperRepository {
-  _FakeDeveloperRepository() : super(Dio());
-
+class _FakeDeveloperRepository implements DeveloperRepository {
   List<Task> tasks = [];
   bool fetchShouldThrow = false;
   int submitCallCount = 0;

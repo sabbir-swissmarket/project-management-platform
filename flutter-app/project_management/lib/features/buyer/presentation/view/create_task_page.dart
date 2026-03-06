@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:project_management/features/shared/domain/entities/developer.dart';
 
-import '../../domain/developer_model.dart';
 import '../provider/buyer_provider.dart';
 
 class CreateTaskPage extends ConsumerStatefulWidget {

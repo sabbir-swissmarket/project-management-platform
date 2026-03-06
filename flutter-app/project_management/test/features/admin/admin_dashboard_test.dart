@@ -1,10 +1,9 @@
-import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:project_management/features/admin/data/admin_repository.dart';
-import 'package:project_management/features/admin/domain/admin_stats_model.dart';
+import 'package:project_management/features/admin/domain/entities/admin_stats.dart';
+import 'package:project_management/features/admin/domain/repositories/admin_repository.dart';
 import 'package:project_management/features/admin/presentation/provider/admin_provider.dart';
 import 'package:project_management/features/admin/presentation/view/admin_dashboard_page.dart';
 
@@ -77,9 +76,7 @@ class _StubAdminNotifier extends AdminNotifier {
   }
 }
 
-class _NoopAdminRepository extends AdminRepository {
-  _NoopAdminRepository() : super(Dio());
-
+class _NoopAdminRepository implements AdminRepository {
   @override
   Future<AdminStats> fetchStats() {
     throw UnimplementedError();

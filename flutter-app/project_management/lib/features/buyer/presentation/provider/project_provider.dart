@@ -1,14 +1,14 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
-import 'package:project_management/core/network/dio_provider.dart';
-import 'package:project_management/features/buyer/domain/project_model.dart';
+import 'package:project_management/features/shared/domain/entities/project.dart';
 
-import '../../data/buyer_repository.dart';
+import '../../domain/repositories/buyer_repository.dart';
+import 'buyer_repository_provider.dart';
 
 final projectProvider =
     StateNotifierProvider<ProjectNotifier, AsyncValue<List<Project>>>((ref) {
-      final dio = DioProvider.createDio();
-      return ProjectNotifier(BuyerRepository(dio));
+      final repository = ref.read(buyerRepositoryProvider);
+      return ProjectNotifier(repository);
     });
 
 class ProjectNotifier extends StateNotifier<AsyncValue<List<Project>>> {

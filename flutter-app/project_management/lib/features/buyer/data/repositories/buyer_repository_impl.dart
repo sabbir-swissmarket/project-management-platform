@@ -4,42 +4,28 @@ import 'package:dio/dio.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 
-import '../domain/project_model.dart';
-import '../domain/task_model.dart';
-import '../domain/developer_model.dart';
+import '../../../shared/data/models/developer_model.dart';
+import '../../../shared/data/models/project_model.dart';
+import '../../../shared/data/models/task_model.dart';
+import '../../../shared/domain/entities/developer.dart';
+import '../../../shared/domain/entities/project.dart';
+import '../../../shared/domain/entities/task.dart';
+import '../../domain/repositories/buyer_repository.dart';
 
-class BuyerRepository {
-  final Dio dio;
+class BuyerRepositoryImpl implements BuyerRepository {
+  BuyerRepositoryImpl(this._dio);
 
-  BuyerRepository(this.dio);
+  final Dio _dio;
 
-  Future<List<Project>> fetchProjects() async {
-    final response = await dio.get("/projects");
-
-    return (response.data as List).map((e) => Project.fromJson(e)).toList();
-  }
-
-  Future<List<Task>> fetchTasks(String projectId) async {
-    final response = await dio.get("/projects/$projectId/tasks");
-
-    return (response.data as List).map((e) => Task.fromJson(e)).toList();
-  }
-
+  @override
   Future<void> createProject(String title, String description) async {
-    await dio.post(
-      "/projects",
-      data: {"title": title, "description": description},
+    await _dio.post(
+      '/projects',
+      data: {'title': title, 'description': description},
     );
   }
 
-  Future<List<Developer>> fetchDevelopers() async {
-    final response = await dio.get("/developers");
-
-    return (response.data as List)
-        .map((e) => Developer.fromJson(e as Map<String, dynamic>))
-        .toList();
-  }
-
+  @override
   Future<void> createTask({
     required String projectId,
     required String title,
@@ -47,25 +33,22 @@ class BuyerRepository {
     required double hourlyRate,
     required String developerId,
   }) async {
-    await dio.post(
-      "/tasks",
+    await _dio.post(
+      '/tasks',
       data: {
-        "project_id": projectId,
-        "title": title,
-        "description": description,
-        "hourly_rate": hourlyRate,
-        "assigned_developer_id": developerId,
+        'project_id': projectId,
+        'title': title,
+        'description': description,
+        'hourly_rate': hourlyRate,
+        'assigned_developer_id': developerId,
       },
     );
   }
 
-  Future<void> payForTask(String taskId) async {
-    await dio.post("/payments/$taskId");
-  }
-
+  @override
   Future<String> downloadSolution(String taskId) async {
-    final response = await dio.get(
-      "/tasks/$taskId/download",
+    final response = await _dio.get<List<int>>(
+      '/tasks/$taskId/download',
       options: Options(responseType: ResponseType.bytes),
     );
 
@@ -75,19 +58,48 @@ class BuyerRepository {
     );
 
     final directory = await _resolveDownloadDirectory();
-    final filePath = "${directory.path}/$fileName";
+    final filePath = '${directory.path}/$fileName';
     final file = File(filePath);
 
     if (!await file.parent.exists()) {
       await file.parent.create(recursive: true);
     }
 
-    await file.writeAsBytes(
-      (response.data as List<int>),
-      flush: true,
-    );
+    await file.writeAsBytes(response.data ?? <int>[], flush: true);
 
     return file.path;
+  }
+
+  @override
+  Future<List<Developer>> fetchDevelopers() async {
+    final response = await _dio.get('/developers');
+
+    return (response.data as List<dynamic>)
+        .map((e) => DeveloperModel.fromJson(e as Map<String, dynamic>))
+        .toList();
+  }
+
+  @override
+  Future<List<Project>> fetchProjects() async {
+    final response = await _dio.get('/projects');
+
+    return (response.data as List<dynamic>)
+        .map((e) => ProjectModel.fromJson(e as Map<String, dynamic>))
+        .toList();
+  }
+
+  @override
+  Future<List<Task>> fetchTasks(String projectId) async {
+    final response = await _dio.get('/projects/$projectId/tasks');
+
+    return (response.data as List<dynamic>)
+        .map((e) => TaskModel.fromJson(e as Map<String, dynamic>))
+        .toList();
+  }
+
+  @override
+  Future<void> payForTask(String taskId) async {
+    await _dio.post('/payments/$taskId');
   }
 
   String _resolveFileName(String? header, String taskId) {
@@ -110,7 +122,7 @@ class BuyerRepository {
       }
     }
 
-    return "task_$taskId.zip";
+    return 'task_$taskId.zip';
   }
 
   Future<Directory> _resolveDownloadDirectory() async {
@@ -146,7 +158,7 @@ class BuyerRepository {
       return downloads;
     }
 
-    return await getApplicationDocumentsDirectory();
+    return getApplicationDocumentsDirectory();
   }
 
   Future<void> _ensureStoragePermission() async {
@@ -169,7 +181,7 @@ class BuyerRepository {
 
     if (!manageStatus.isGranted) {
       throw Exception(
-        "Storage permission is required to save downloads. Please enable it in Settings.",
+        'Storage permission is required to save downloads. Please enable it in Settings.',
       );
     }
   }

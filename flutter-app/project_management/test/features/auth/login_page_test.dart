@@ -1,12 +1,11 @@
-import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:project_management/core/storage/local_storage_service.dart';
 import 'package:project_management/core/storage/secure_storage_services.dart';
-import 'package:project_management/features/auth/data/auth_repository.dart';
 import 'package:project_management/features/auth/domain/auth_state.dart';
+import 'package:project_management/features/auth/domain/repositories/auth_repository.dart';
 import 'package:project_management/features/auth/presentation/provider/auth_provider.dart';
 import 'package:project_management/features/auth/presentation/view/login_page.dart';
 
@@ -76,7 +75,7 @@ class _TestAuthNotifier extends AuthNotifier {
       : super(
           storage: _MemorySecureStorage(),
           localStorage: _MemoryLocalStorage(),
-          repository: AuthRepository(Dio()),
+          repository: _FakeAuthRepository(),
         );
 
   final List<Map<String, String>> loginRequests = [];
@@ -86,6 +85,11 @@ class _TestAuthNotifier extends AuthNotifier {
     loginRequests.add({'email': email, 'password': password});
     state = state.copyWith(status: AuthStatus.loading);
   }
+}
+
+class _FakeAuthRepository implements AuthRepository {
+  @override
+  Future<String> login(String email, String password) async => 'token';
 }
 
 class _MemorySecureStorage implements SecureStorageService {

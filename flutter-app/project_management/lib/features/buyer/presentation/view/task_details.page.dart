@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:project_management/core/network/dio_provider.dart';
-import 'package:project_management/features/buyer/data/buyer_repository.dart';
 
 import '../../../auth/presentation/provider/auth_provider.dart';
+import '../../domain/repositories/buyer_repository.dart';
+import '../provider/buyer_repository_provider.dart';
 import '../provider/task_provider.dart';
 
 class TaskDetailsPage extends ConsumerWidget {
@@ -18,7 +18,7 @@ class TaskDetailsPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final repository = BuyerRepository(DioProvider.createDio());
+    final repository = ref.read(buyerRepositoryProvider);
 
     final asyncTasks = ref.watch(taskProvider);
     final authState = ref.watch(authProvider);
