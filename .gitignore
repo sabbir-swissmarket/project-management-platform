@@ -1,0 +1,8 @@
+.env
+__pycache__/
+*.pyc
+.vscode/
+.idea/
+ARCHITECTURE.md
+DOCKER.md
+SETUP.md
