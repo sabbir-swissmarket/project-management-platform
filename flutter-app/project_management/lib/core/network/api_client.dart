@@ -1,12 +1,14 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
+import 'package:project_management/core/network/base_url.dart';
+
 class ApiClient {
   final Dio _dio = Dio();
   final _storage = const FlutterSecureStorage();
 
-  ApiClient() {
-    _dio.options.baseUrl = "http://localhost:8000";
+  ApiClient({String? overrideBaseUrl}) {
+    _dio.options.baseUrl = resolveBaseUrl(overrideBaseUrl: overrideBaseUrl);
   }
 
   Future<void> attachToken() async {

@@ -2,16 +2,16 @@ import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
+import 'package:project_management/core/network/base_url.dart';
+
 class DioProvider {
   /// Creates a preconfigured Dio instance.
   ///
   /// By default we connect to the local backend. On Android emulators
   /// "localhost" refers to the emulator itself, so we use 10.0.2.2 instead.
+  /// For iOS simulators & desktop we can hit the host directly.
   static Dio createDio({String? overrideBaseUrl}) {
-    final defaultBase = kIsWeb
-        ? 'http://localhost:8000'
-        : 'http://10.0.2.2:8000';
-    final baseUrl = overrideBaseUrl ?? defaultBase;
+    final baseUrl = resolveBaseUrl(overrideBaseUrl: overrideBaseUrl);
 
     final dio = Dio(
       BaseOptions(
